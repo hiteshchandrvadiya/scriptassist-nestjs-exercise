@@ -14,8 +14,8 @@ export class OverdueTasksService {
   constructor(
     @InjectQueue('task-processing')
     private taskQueue: Queue,
-    @InjectRepository(Task)
-    private tasksRepository: Repository<Task>,
+    // @InjectRepository(Task)
+    // private tasksRepository: Repository<Task>,
   ) {}
 
   // TODO: Implement the overdue tasks checker
@@ -31,14 +31,14 @@ export class OverdueTasksService {
     
     // Example implementation (incomplete - to be implemented by candidates)
     const now = new Date();
-    const overdueTasks = await this.tasksRepository.find({
-      where: {
-        dueDate: LessThan(now),
-        status: TaskStatus.PENDING,
-      },
-    });
+    // const overdueTasks = await this.tasksRepository.find({
+    //   where: {
+    //     dueDate: LessThan(now),
+    //     status: TaskStatus.PENDING,
+    //   },
+    // });
     
-    this.logger.log(`Found ${overdueTasks.length} overdue tasks`);
+    // this.logger.log(`Found ${overdueTasks.length} overdue tasks`);
     
     // Add tasks to the queue to be processed
     // TODO: Implement adding tasks to the queue
