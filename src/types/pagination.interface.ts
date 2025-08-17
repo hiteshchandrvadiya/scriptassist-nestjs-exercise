@@ -5,6 +5,11 @@ export interface PaginationOptions {
   sortOrder?: 'ASC' | 'DESC';
 }
 
+export enum ESortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
@@ -13,4 +18,4 @@ export interface PaginatedResponse<T> {
     limit: number;
     totalPages: number;
   };
-} 
+}

@@ -4,12 +4,13 @@ import { BullModule } from '@nestjs/bullmq';
 import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
 import { Task } from './entities/task.entity';
-import { MapperProfile, QueryHandlers } from '.';
+import { CommandHandlers, MapperProfile, QueryHandlers } from '.';
 import { TASK_REPO, TaskRepo } from './repository';
 import { CqrsMediator } from 'src/cqrs';
 import { AppModule } from 'src/app.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TaskEntityMapperProfile } from './helpers';
+import { UsersModule } from '@modules/users/users.module';
 
 @Module({
   // imports: [
@@ -34,10 +35,12 @@ export class TasksModule {
           name: 'task-processing',
         }),
         CqrsModule,
+        UsersModule,
       ],
       providers: [
         ...QueryHandlers,
         ...MapperProfile,
+        ...CommandHandlers,
         TasksService,
         TaskEntityMapperProfile,
         {
@@ -49,10 +52,11 @@ export class TasksModule {
       exports: [
         ...QueryHandlers,
         ...MapperProfile,
+        ...CommandHandlers,
         TaskEntityMapperProfile,
         TasksService,
         TASK_REPO,
-        TypeOrmModule
+        TypeOrmModule,
       ],
     };
   }
