@@ -10,11 +10,13 @@ import {
   CreateTaskCommand,
   DeleteTaskCommand,
   UpdateTaskCommand,
+  UpdateTaskStatusCommand,
 } from '../commands';
 import { GetTaskDto } from '../dto/get-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { DeleteTaskDto } from '../dto/delete-task.dto';
 import { BatchProcessTasksDto } from '../dto/batch-process-tasks.dto';
+import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 
 export class TaskMapperProfile extends AutomapperProfile {
   constructor(@InjectMapper() protected readonly mapper: Mapper) {
@@ -30,6 +32,7 @@ export class TaskMapperProfile extends AutomapperProfile {
       this.bulkProcess(mapper);
       this.listAndSearch(mapper);
       this.response(mapper);
+      this.updateStatus(mapper);
     };
   }
 
@@ -59,5 +62,9 @@ export class TaskMapperProfile extends AutomapperProfile {
 
   private response(mapper: Mapper): void {
     createMap(mapper, TaskDomain, TaskResponseDto);
+  }
+
+  private updateStatus(mapper: Mapper): void {
+    createMap(mapper, UpdateTaskStatusDto, UpdateTaskStatusCommand);
   }
 }

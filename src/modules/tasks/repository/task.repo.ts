@@ -3,17 +3,22 @@ import { ITaskRepo } from './i-task.repo';
 import { TaskFilterQuery } from '../queries/task-filter-query';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from '../entities/task.entity';
-import { ILike, In, Repository } from 'typeorm';
+import { ILike, In, LessThan, Repository } from 'typeorm';
 import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
 import { TaskDomain } from '../domain/task';
 import { filter, isNil } from 'lodash';
 import { PaginatedResponse } from 'src/types/pagination.interface';
-import { BatchProcessTasksCommand, CreateTaskCommand, UpdateTaskCommand } from '../commands';
+import {
+  BatchProcessTasksCommand,
+  CreateTaskCommand,
+  UpdateTaskCommand,
+  UpdateTaskStatusCommand,
+} from '../commands';
 import { TaskStatus } from '../enums/task-status.enum';
 import { TaskPriority } from '../enums/task-priority.enum';
 import { UsersService } from '@modules/users/users.service';
-import { GetTaskQuery } from '../queries';
+import { GetOverdueTasksQuery, GetTaskQuery } from '../queries';
 
 export class TaskRepo implements ITaskRepo {
   constructor(
@@ -200,6 +205,34 @@ export class TaskRepo implements ITaskRepo {
       const deleteResult = await this.taskRepository.delete(ids);
 
       return deleteResult?.affected ? true : false;
+    } catch (error) {
+      this.logger.error(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  public async updateStatus(command: UpdateTaskStatusCommand): Promise<boolean> {
+    try {
+      const { id, status } = command;
+      const updatedTask = await this.taskRepository.update(id, { status: status });
+
+      return updatedTask?.affected ? true : false;
+    } catch (error) {
+      this.logger.error(error);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  public async getOverdueTasks(query: GetOverdueTasksQuery): Promise<TaskDomain[]> {
+    try {
+      const tasks = await this.taskRepository.find({
+        where: {
+          dueDate: LessThan(query.now),
+          status: TaskStatus.PENDING,
+        },
+      });
+
+      return this.mapper.mapArray(tasks, Task, TaskDomain);
     } catch (error) {
       this.logger.error(error);
       throw new InternalServerErrorException();

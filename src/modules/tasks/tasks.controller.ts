@@ -63,11 +63,17 @@ export class TasksController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new task' })
-  public async create(@Body() model: CreateTaskDto): Promise<TaskResponseDto> {
+  public async create(@Body() model: CreateTaskDto): Promise<HttpResponse<TaskResponseDto>> {
     const command = this.mapper.map(model, CreateTaskDto, CreateTaskCommand);
     const task = await this.mediator.execute<CreateTaskCommand, TaskDomain>(command);
 
-    return this.mapper.map(task, TaskDomain, TaskResponseDto);
+    const taskResponse = this.mapper.map(task, TaskDomain, TaskResponseDto);
+
+    return {
+      data: taskResponse,
+      message: 'Task created successfully',
+      success: true,
+    }
   }
 
   @Get()
@@ -231,7 +237,7 @@ export class TasksController {
 
     const command = this.mapper.map(model, BatchProcessTasksDto, BatchProcessTasksCommand);
 
-    const result = await this.mediator.execute<BatchProcessTasksCommand, any>(command);
+    const result = await this.mediator.execute<BatchProcessTasksCommand, boolean>(command);
 
     return {
       data: result,
