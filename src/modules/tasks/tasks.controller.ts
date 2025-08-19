@@ -48,7 +48,7 @@ class JwtAuthGuard {}
 @ApiTags('tasks')
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RateLimitGuard)
-@RateLimit({ limit: 100, windowMs: 60000 })
+@RateLimit({ windowMs: 10000, maxRequests: 2 })
 @ApiBearerAuth()
 export class TasksController {
   constructor(

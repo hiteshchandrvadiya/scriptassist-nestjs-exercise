@@ -20,6 +20,8 @@ export class BatchProcessTasksCommandHandler
         return this.taskRepo.bulkUpdateStatus(ids, TaskStatus.COMPLETED);
       case EAction.DELETE:
         return this.taskRepo.bulkDelete(ids);
+      case EAction.OVERDUE:
+        return this.taskRepo.bulkUpdateStatus(ids, TaskStatus.OVERDUE);
       default:
         throw new Error(`Unsupported action: ${action}`);
     }

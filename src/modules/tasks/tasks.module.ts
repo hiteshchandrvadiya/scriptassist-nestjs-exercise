@@ -11,6 +11,7 @@ import { AppModule } from 'src/app.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TaskEntityMapperProfile } from './helpers';
 import { UsersModule } from '@modules/users/users.module';
+import { CacheService } from '@common/services/cache.service';
 
 @Module({
   // imports: [
@@ -48,6 +49,7 @@ export class TasksModule {
           useClass: TaskRepo,
         },
         Logger,
+        CacheService,
       ],
       exports: [
         ...QueryHandlers,

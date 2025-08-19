@@ -9,6 +9,8 @@ import { JobResult } from '@queues/domain/job-result';
 import { now } from 'lodash';
 import { GetOverdueTasksQuery } from '@modules/tasks/queries';
 import { EAction, TaskDomain } from '@modules/tasks/domain';
+import { DataSource } from 'typeorm';
+import { Task } from '@modules/tasks/entities/task.entity';
 
 @Injectable()
 @Processor('task-processing')
@@ -18,6 +20,7 @@ export class TaskProcessorService extends WorkerHost {
   constructor(
     private readonly tasksService: TasksService,
     private readonly mediator: CqrsMediator,
+    private readonly dataSource: DataSource,
   ) {
     super();
   }
@@ -50,38 +53,54 @@ export class TaskProcessorService extends WorkerHost {
   }
 
   private async handleStatusUpdate(job: Job): Promise<JobResult> {
-    const { taskId, status } = job.data;
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    if (!taskId || !status) {
-      return { success: false, error: 'Missing required data', retryable: false };
-    }
+    await queryRunner.connect();
 
-    // Inefficient: No validation of status values
-    // No transaction handling
-    // No retry mechanism
+    await queryRunner.startTransaction();
+    try {
+      const { taskId, status } = job.data;
 
-    if (!this.isValidStatus(status)) {
-      return { success: false, error: 'Invalid status', retryable: false };
-    }
-    const command = new UpdateTaskStatusCommand(taskId, status);
+      if (!taskId || !status) {
+        return { success: false, error: 'Missing required data', retryable: false };
+      }
 
-    const result = await this.mediator.execute(command);
+      // Inefficient: No validation of status values
+      // No transaction handling
+      // No retry mechanism
 
-    if (result) {
-      return {
-        success: result,
-        data: {
-          taskId,
-          newStatus: status,
-          updatedAt: new Date().toISOString(),
-        },
-      };
-    } else {
-      return {
-        success: false,
-        error: 'Task not found',
-        retryable: false,
-      };
+      if (!this.isValidStatus(status)) {
+        return { success: false, error: 'Invalid status', retryable: false };
+      }
+
+      const result = await queryRunner.manager.update(Task, { id: taskId }, { status: status });
+
+      const isRecordUpdated = (result?.affected ?? 0) > 0;
+
+      if (isRecordUpdated) {
+        return {
+          success: isRecordUpdated,
+          data: {
+            taskId,
+            newStatus: status,
+            updatedAt: new Date().toISOString(),
+          },
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Task not found',
+          retryable: false,
+        };
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      this.logger.error(error);
+
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -100,7 +119,7 @@ export class TaskProcessorService extends WorkerHost {
       const taskIds = tasks.map((task: TaskDomain) => task.id);
 
       const updatedTasks = await this.mediator.execute<BatchProcessTasksCommand, boolean>(
-        new BatchProcessTasksCommand(taskIds, EAction.COMPLETE),
+        new BatchProcessTasksCommand(taskIds, EAction.OVERDUE),
       );
 
       if (!updatedTasks) {
