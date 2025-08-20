@@ -15,6 +15,8 @@ import { classes } from '@automapper/classes';
 import { CqrsMediator } from './cqrs';
 import { CommandBus, CqrsModule, QueryBus } from '@nestjs/cqrs';
 import { CqrsMediatorModule } from './cqrs/cqrs.module';
+import { HealthCheckController } from './controllers/health-check.controller';
+import { HealthCheckService } from '@common/services/heath-check.service';
 
 @Module({
   imports: [
@@ -82,11 +84,15 @@ import { CqrsMediatorModule } from './cqrs/cqrs.module';
     // CqrsModule,
     CqrsMediatorModule
   ],
+  controllers: [
+    HealthCheckController,
+  ],
   providers: [
     // Inefficient: Global cache service with no configuration options
     // This creates a single in-memory cache instance shared across all modules
     CacheService,
     CqrsMediator,
+    HealthCheckService,
   ],
   exports: [
     // Exporting the cache service makes it available to other modules
