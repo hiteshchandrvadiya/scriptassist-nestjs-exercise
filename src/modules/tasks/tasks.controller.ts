@@ -40,16 +40,17 @@ import { TaskStatsResponseDto } from './dto/task-statistics-response.dto';
 import { DeleteTaskCommand } from './commands/delete/delete-task.command';
 import { DeleteTaskDto } from './dto/delete-task.dto';
 import { BatchProcessTasksDto } from './dto/batch-process-tasks.dto';
-
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { RequestUser } from '@modules/auth/types/request-user.types';
 // This guard needs to be implemented or imported from the correct location
 // We're intentionally leaving it as a non-working placeholder
-class JwtAuthGuard {}
 
 @ApiTags('tasks')
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RateLimitGuard)
 @RateLimit({ windowMs: 10000, maxRequests: 2 })
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 export class TasksController {
   constructor(
     private readonly tasksService: TasksService,
@@ -63,8 +64,13 @@ export class TasksController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new task' })
-  public async create(@Body() model: CreateTaskDto): Promise<HttpResponse<TaskResponseDto>> {
+  public async create(
+    @Body() model: CreateTaskDto,
+    @CurrentUser() user: RequestUser,
+  ): Promise<HttpResponse<TaskResponseDto>> {
     const command = this.mapper.map(model, CreateTaskDto, CreateTaskCommand);
+    command.userId = user.userId;
+
     const task = await this.mediator.execute<CreateTaskCommand, TaskDomain>(command);
 
     const taskResponse = this.mapper.map(task, TaskDomain, TaskResponseDto);
@@ -73,7 +79,7 @@ export class TasksController {
       data: taskResponse,
       message: 'Task created successfully',
       success: true,
-    }
+    };
   }
 
   @Get()
@@ -161,6 +167,7 @@ export class TasksController {
   public async update(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
+    @CurrentUser() user: RequestUser,
   ): Promise<HttpResponse<boolean>> {
     // No validation if task exists before update
     // return this.tasksService.update(id, updateTaskDto);
@@ -168,6 +175,7 @@ export class TasksController {
     const command = this.mapper.map(updateTaskDto, UpdateTaskDto, UpdateTaskCommand);
 
     command.id = id;
+    command.userId = user.userId;
 
     // task exists check added inside the command handler
     const result = await this.mediator.execute<UpdateTaskCommand, boolean>(command);

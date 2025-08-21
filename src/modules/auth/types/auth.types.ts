@@ -37,7 +37,7 @@ export interface JwtPayload {
   exp?: number; // expiry (epoch seconds)
   iss?: string; // issuer
   aud?: string; // audience
-  jti?: string; // JWT ID (optional but useful for token revocation)
+  sid?: string; // JWT ID (optional but useful for token revocation)
 }
 
 // ---------- Lockout ----------

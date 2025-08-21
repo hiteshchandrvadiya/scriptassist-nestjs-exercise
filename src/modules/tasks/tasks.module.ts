@@ -6,12 +6,11 @@ import { TasksController } from './tasks.controller';
 import { Task } from './entities/task.entity';
 import { CommandHandlers, MapperProfile, QueryHandlers } from '.';
 import { TASK_REPO, TaskRepo } from './repository';
-import { CqrsMediator } from 'src/cqrs';
-import { AppModule } from 'src/app.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TaskEntityMapperProfile } from './helpers';
 import { UsersModule } from '@modules/users/users.module';
 import { CacheService } from '@common/services/cache.service';
+import { AuthModule } from '@modules/auth/auth.module';
 
 @Module({
   // imports: [
@@ -37,6 +36,7 @@ export class TasksModule {
         }),
         CqrsModule,
         UsersModule,
+        AuthModule,
       ],
       providers: [
         ...QueryHandlers,

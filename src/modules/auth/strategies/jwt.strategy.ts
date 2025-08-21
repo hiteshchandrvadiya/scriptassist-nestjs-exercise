@@ -22,16 +22,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid token type');
     }
     const user = await this.usersService.findOne(payload.sub);
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
+    if (!user) throw new UnauthorizedException('User not found');
 
     return {
       id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
+      sid: payload.sid, // carry sid forward if you ever use AuthGuard('jwt')
     };
   }
 }
