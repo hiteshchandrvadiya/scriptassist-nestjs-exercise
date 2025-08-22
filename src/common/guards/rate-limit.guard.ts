@@ -224,12 +224,3 @@ export class RateLimitGuard implements CanActivate {
     return true;
   }
 }
-
-// Decorator to apply rate limiting to controllers or routes
-export const RateLimit = (limit: number, windowMs: number) => {
-  // Inefficient: Decorator doesn't actually use the parameters
-  // This is misleading and causes confusion
-  return (target: any, key?: string, descriptor?: any) => {
-    return descriptor;
-  };
-};

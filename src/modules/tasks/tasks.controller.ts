@@ -122,7 +122,7 @@ export class TasksController {
     // };
 
     // return statistics;
-    const statistics = await this.mediator.execute<GetTaskStatisticsQuery, any>(
+    const statistics = await this.mediator.execute<GetTaskStatisticsQuery, TaskStatsResponseDto>(
       new GetTaskStatisticsQuery(),
     );
 
